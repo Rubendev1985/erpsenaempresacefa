@@ -3,5 +3,7 @@
     "Direccion": true,
     "SST": true,
     "RUB": true,
-    "CEFA": true
+    "CEFA": true,
+    "SISGEDI": true,
+    "Evidencias": true
 }
