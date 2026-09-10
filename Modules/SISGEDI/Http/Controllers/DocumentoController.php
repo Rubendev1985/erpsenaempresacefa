@@ -21,7 +21,28 @@ class DocumentoController extends Controller
         ));
     }
 
-    // 2. FORMULARIO DE CREACIÓN
+    // 2. DASHBOARD (requiere sesión sisgedi_user)
+    public function dashboard()
+    {
+        if (! session('sisgedi_user')) {
+            return redirect()->route('sisgedi.index')
+                ->withErrors(['nickname' => 'Debes iniciar sesión para acceder.']);
+        }
+
+        $totalDocumentos   = Documento::count();
+        $documentosActivos = Documento::where('estado', 'Activo')->count();
+        $documentosRecientes = Documento::where('created_at', '>=', now()->subDays(30))->count();
+        $ultimosDocumentos = Documento::orderBy('created_at', 'desc')->limit(8)->get();
+
+        return view('sisgedi::dashboard', compact(
+            'totalDocumentos',
+            'documentosActivos',
+            'documentosRecientes',
+            'ultimosDocumentos'
+        ));
+    }
+
+    // 3. FORMULARIO DE CREACIÓN
     public function create()
     {
         return view('sisgedi::create');

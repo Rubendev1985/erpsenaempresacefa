@@ -90,15 +90,22 @@
                     </div>
 
                     {{-- Formulario --}}
-                    <form action="{{ route('login.post') }}" method="POST" class="px-8 pb-8">
+                    <form action="{{ route('sisgedi.login.post') }}" method="POST" class="px-8 pb-8">
                         @csrf
 
-                        {{-- Errores --}}
-                        @if($errors->any())
-                        <div class="mb-4 p-3 rounded-xl text-xs text-red-700 bg-red-50 border border-red-200">
-                            {{ $errors->first() }}
+                        {{-- Error usuario --}}
+                        @error('nickname')
+                        <div class="mb-4 p-3 rounded-xl text-xs text-red-700 bg-red-50 border border-red-200 flex items-center gap-2">
+                            <i class="fas fa-exclamation-circle flex-shrink-0"></i> {{ $message }}
                         </div>
-                        @endif
+                        @enderror
+
+                        {{-- Error contraseña --}}
+                        @error('password')
+                        <div class="mb-4 p-3 rounded-xl text-xs text-red-700 bg-red-50 border border-red-200 flex items-center gap-2">
+                            <i class="fas fa-exclamation-circle flex-shrink-0"></i> {{ $message }}
+                        </div>
+                        @enderror
 
                         {{-- Usuario --}}
                         <div class="mb-4">
@@ -111,8 +118,8 @@
                                        placeholder="Usuario o correo electrónico"
                                        value="{{ old('nickname') }}"
                                        class="sena-input w-full pl-10 pr-4 py-3 text-sm rounded-xl
-                                              border border-gray-200 bg-gray-50 text-gray-800
-                                              placeholder-gray-400 transition-all">
+                                              border {{ $errors->has('nickname') ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-gray-50' }}
+                                              text-gray-800 placeholder-gray-400 transition-all">
                             </div>
                         </div>
 
@@ -127,8 +134,8 @@
                                        name="password"
                                        placeholder="Contraseña"
                                        class="sena-input w-full pl-10 pr-11 py-3 text-sm rounded-xl
-                                              border border-gray-200 bg-gray-50 text-gray-800
-                                              placeholder-gray-400 transition-all">
+                                              border {{ $errors->has('password') ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-gray-50' }}
+                                              text-gray-800 placeholder-gray-400 transition-all">
                                 <button type="button"
                                         onclick="togglePassword()"
                                         class="absolute right-3.5 top-1/2 -translate-y-1/2
