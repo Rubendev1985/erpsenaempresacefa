@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>@yield('title', 'Portal del Aprendiz • SENA APÍCOLA')</title>
+    <link rel="icon" type="image/png" href="{{ asset('modules/apicola/img/logo.png') }}">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    @yield('styles')
+
+    <style>
+        :root {
+            /* Paleta Premium Apícola & SENA */
+            --ap-primary-dark: #071e18;
+            --ap-primary-forest: #0b2e23;
+            --ap-primary: #047857;
+            --ap-primary-light: #10b981;
+            --ap-emerald-soft: #ecfdf5;
+            
+            --ap-gold: #f59e0b;
+            --ap-gold-light: #fbbf24;
+            --ap-gold-dark: #b45309;
+            --ap-gold-soft: #fffbeb;
+
+            --ap-teal: #0d9488;
+            --ap-teal-soft: #f0fdfa;
+            --ap-sky: #0284c7;
+            --ap-sky-soft: #f0f9ff;
+            --ap-rose: #e11d48;
+            --ap-rose-soft: #fff1f2;
+
+            --ap-bg: #f8fafc;
+            --ap-card-bg: #ffffff;
+            --ap-border: #e2e8f0;
+            --ap-border-subtle: #f1f5f9;
+            --ap-text-main: #0f172a;
+            --ap-text-muted: #64748b;
+            --ap-text-subtle: #94a3b8;
+
+            --ap-shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+            --ap-shadow-sm: 0 2px 5px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
+            --ap-shadow-md: 0 8px 20px -3px rgba(15, 23, 42, 0.07), 0 3px 8px -3px rgba(15, 23, 42, 0.03);
+            --ap-shadow-lg: 0 18px 36px -6px rgba(15, 23, 42, 0.10), 0 8px 16px -6px rgba(15, 23, 42, 0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--ap-bg);
+            color: var(--ap-text-main);
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ================= SIDEBAR ================= */
+        .ap-sidebar {
+            width: 270px;
+            height: 100vh;
+            background: linear-gradient(180deg, #071e18 0%, #0c2b22 50%, #081d17 100%);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 1000;
+            box-shadow: 4px 0 28px rgba(0, 0, 0, 0.25);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            user-select: none;
+        }
+
+        .ap-sidebar-header {
+            padding: 1.5rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: linear-gradient(90deg, rgba(251, 191, 36, 0.08) 0%, transparent 100%);
+        }
+
+        .ap-logo-hex {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+            padding: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+            flex-shrink: 0;
+        }
+
+        .ap-logo-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+
+        .ap-brand-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ap-brand-title {
+            font-size: 1.05rem;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            color: #fbbf24;
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .ap-brand-sub {
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+        }
+
+        .ap-nav-list {
+            list-style: none;
+            padding: 1.25rem 0.85rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .ap-nav-item {
+            position: relative;
+        }
+
+        .ap-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            color: #cbd5e1;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .ap-nav-link:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateX(4px);
+        }
+
+        .ap-nav-item.active .ap-nav-link {
+            color: #ffffff;
+            background: linear-gradient(90deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.05) 100%);
+            border-left: 3px solid #10b981;
+            font-weight: 700;
+        }
+
+        .ap-nav-icon {
+            width: 22px;
+            display: flex;
+            justify-content: center;
+            font-size: 1.05rem;
+            color: #94a3b8;
+            transition: color 0.2s;
+        }
+
+        .ap-nav-item.active .ap-nav-icon {
+            color: #fbbf24;
+        }
+
+        .ap-sidebar-user {
+            padding: 1rem 1.15rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .ap-user-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            overflow: hidden;
+        }
+
+        .ap-avatar-circle {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            flex-shrink: 0;
+        }
+
+        .ap-user-details {
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ap-user-title {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #f8fafc;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .ap-user-sub {
+            font-size: 0.72rem;
+            color: #fbbf24;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .ap-btn-exit {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            padding: 6px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ap-btn-exit:hover {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* ================= CONTENEDOR PRINCIPAL ================= */
+        .ap-main-wrapper {
+            margin-left: 270px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            transition: margin-left 0.3s;
+        }
+
+        .ap-topbar {
+            height: 64px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--ap-border);
+            padding: 0 1.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 99;
+            box-shadow: var(--ap-shadow-xs);
+        }
+
+        .ap-breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--ap-text-muted);
+        }
+
+        .ap-breadcrumb a {
+            color: var(--ap-text-muted);
+            text-decoration: none;
+            transition: color 0.15s;
+        }
+
+        .ap-breadcrumb a:hover {
+            color: var(--ap-primary);
+        }
+
+        .ap-breadcrumb .active-page {
+            color: var(--ap-primary-forest);
+            font-weight: 700;
+        }
+
+        .ap-topbar-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .ap-pill-climate {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: #fef3c7;
+            border: 1px solid #fde68a;
+            color: #92400e;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .ap-btn-public-portal {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: 1px solid var(--ap-border);
+            background: #ffffff;
+            color: var(--ap-text-main);
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .ap-btn-public-portal:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        .ap-content-container {
+            padding: 2rem 2.25rem;
+            flex-grow: 1;
+        }
+
+        @media (max-width: 992px) {
+            .ap-sidebar {
+                transform: translateX(-100%);
+            }
+            .ap-main-wrapper {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SIDEBAR APRENDIZ -->
+    <aside class="ap-sidebar">
+        <div class="ap-sidebar-header">
+            <div class="ap-logo-hex">
+                <img src="{{ asset('modules/apicola/img/logo.png') }}" 
+                     alt="SENA Apícola" 
+                     class="ap-logo-img"
+                     onerror="this.onerror=null; this.src='{{ asset('apicola-assets/assets/img/logo-apicola-bee-original.png') }}';">
+            </div>
+            <div class="ap-brand-info">
+                <div class="ap-brand-title">
+                    <span style="color: #ffffff; font-weight: 900;">SENA</span>
+                    <span>APÍCOLA</span>
+                </div>
+                <div class="ap-brand-sub">PORTAL DEL APRENDIZ</div>
+            </div>
+        </div>
+
+        <ul class="ap-nav-list">
+            <!-- Módulos del Aprendiz -->
+            <li class="ap-nav-item {{ request()->routeIs('apicola.aprendiz.colmenas.index') || (request()->is('apicola/aprendiz/colmenas') && !request()->is('*inspeccion*')) ? 'active' : '' }}">
+                <a href="{{ route('apicola.aprendiz.colmenas.index') }}" class="ap-nav-link">
+                    <span class="ap-nav-icon"><i class="fas fa-boxes-stacked"></i></span>
+                    <span>Colmenas</span>
+                </a>
+            </li>
+            <li class="ap-nav-item {{ request()->routeIs('apicola.aprendiz.inspecciones.*') || request()->routeIs('apicola.aprendiz.colmenas.inspecciones') || request()->is('*inspeccion*') ? 'active' : '' }}">
+                <a href="{{ route('apicola.aprendiz.inspecciones.index') }}" class="ap-nav-link">
+                    <span class="ap-nav-icon"><i class="fas fa-clipboard-check"></i></span>
+                    <span>Registro e inspección</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="ap-sidebar-user">
+            <div class="ap-user-left">
+                <div class="ap-avatar-circle" style="background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);">
+                    {{ Auth::user()?->initials ?? strtoupper(substr(Auth::user()?->nickname ?? 'AP', 0, 2)) }}
+                </div>
+                <div class="ap-user-details">
+                    <div class="ap-user-title" title="{{ Auth::user()?->full_name ?? (Auth::user()?->nickname ?? 'Aprendiz SENA') }}">
+                        {{ Auth::user()?->full_name ?? (Auth::user()?->nickname ?? 'Aprendiz SENA') }}
+                    </div>
+                    <div class="ap-user-sub">
+                        <i class="fas fa-graduation-cap" style="color: #fbbf24;"></i> Rol: Aprendiz Apícola
+                    </div>
+                </div>
+            </div>
+            <a href="{{ route('logout', ['redirect' => route('apicola.welcome')]) }}" class="ap-btn-exit" title="Cerrar sesión">
+                <i class="fas fa-arrow-right-from-bracket"></i>
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTAINER -->
+    <div class="ap-main-wrapper">
+        <header class="ap-topbar">
+            <div class="ap-breadcrumb">
+                <i class="fas fa-home" style="font-size:0.8rem; color:#94a3b8;"></i>
+                <a href="{{ route('apicola.welcome') }}">Inicio</a>
+                <span>/</span>
+                <a href="{{ route('apicola.aprendiz.dashboard') }}">Módulo Apícola</a>
+                <span>/</span>
+                @yield('breadcrumb')
+            </div>
+
+            <div class="ap-topbar-actions">
+                <div class="ap-pill-climate">
+                    <i class="fas fa-sun"></i>
+                    <span>29°C Campoalegre • Floración Activa</span>
+                </div>
+                <a href="{{ route('apicola.welcome', ['public' => 1]) }}" class="ap-btn-public-portal" target="_blank">
+                    <i class="fas fa-arrow-up-right-from-square"></i> Portal Público
+                </a>
+            </div>
+        </header>
+
+        <main class="ap-content-container">
+            @yield('content')
+        </main>
+    </div>
+
+    <!-- Modales del Módulo -->
+    @yield('modals')
+
+    <!-- Scripts Base -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    @yield('scripts')
+</body>
+</html>
