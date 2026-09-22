@@ -16,8 +16,19 @@ class LoginController extends Controller
     public function showLoginForm(Request $request)
     {
         if (Auth::check()) {
-            $redirect = $request->query('redirect', route('direccion.welcome'));
-            return redirect($redirect)->with('info', 'Ya has iniciado sesión como ' . Auth::user()->full_name);
+            $redirect = $request->query('redirect', '');
+            if (!empty($redirect)) {
+                return redirect($redirect)->with('info', 'Ya has iniciado sesión como ' . Auth::user()->full_name);
+            }
+
+            // Si ya es el gestor de evidencias, mandarlo a su panel
+            if (Auth::id() === 124) {
+                return redirect()->route('evidencias.index')
+                    ->with('info', 'Ya has iniciado sesión como ' . Auth::user()->full_name);
+            }
+
+            return redirect(route('direccion.welcome'))
+                ->with('info', 'Ya has iniciado sesión como ' . Auth::user()->full_name);
         }
 
         $redirect = $request->query('redirect', '');
@@ -49,6 +60,15 @@ class LoginController extends Controller
         if ($user && Hash::check($password, $user->password)) {
             Auth::login($user, $remember);
             $request->session()->regenerate();
+
+            // Redirigir al panel exclusivo del gestor de evidencias.
+            // Se hace ANTES de verificar 'redirect' externo y se limpia
+            // la URL intended para que redirect()->intended() no la sobrescriba.
+            if ($user->id === 124) {
+                $request->session()->forget('url.intended');
+                return redirect()->route('evidencias.index')
+                    ->with('success', '¡Bienvenido(a) al Panel de Evidencias, ' . $user->full_name . '!');
+            }
 
             $redirectUrl = $request->input('redirect');
             if (!empty($redirectUrl) && (str_starts_with($redirectUrl, '/') || str_starts_with($redirectUrl, url('/')))) {
